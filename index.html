@@ -1,116 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>CGPA ↔ CWA Converter</title>
-          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-          <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CGPA ↔ CWA Converter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-          <div class="app-container">
-                    <!-- Auth Container (shown by default) -->
-                    <div class="auth-container" id="authContainer">
-                              <div class="auth-tabs">
-                                        <button class="tab-btn active" id="loginTab">Login</button>
-                                        <button class="tab-btn" id="signupTab">Sign Up</button>
-                              </div>
+    <div class="app-container">
+        <!-- Auth Container (shown by default) -->
+        <div class="auth-container" id="authContainer">
+            <div class="auth-tabs">
+                <button class="tab-btn active" id="loginTab">Login</button>
+                <button class="tab-btn" id="signupTab">Sign Up</button>
+            </div>
 
-                              <div class="auth-form" id="loginForm">
-                                        <h2>Welcome Back!</h2>
-                                        <div class="input-group">
-                                                  <i class="fas fa-user"></i>
-                                                  <input type="text" id="loginUsername" placeholder="Username" required>
-                                        </div>
-                                        <div class="input-group">
-                                                  <i class="fas fa-lock"></i>
-                                                  <input type="password" id="loginPassword" placeholder="Password"
-                                                            required>
-                                        </div>
-                                        <button class="auth-btn" onclick="login()">Login</button>
-                                        <p class="auth-link" id="showSignup">Don't have an account? Sign up</p>
-                              </div>
+            <div class="auth-form" id="loginForm">
+                <h2>Welcome Back!</h2>
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="loginUsername" placeholder="Username" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="loginPassword" placeholder="Password" required>
+                </div>
+                <button class="auth-btn" onclick="login()">Login</button>
+                <p class="auth-link" id="showSignup">Don't have an account? Sign up</p>
+            </div>
 
-                              <div class="auth-form" id="signupForm" style="display: none;">
-                                        <h2>Create Account</h2>
-                                        <div class="input-group">
-                                                  <i class="fas fa-user"></i>
-                                                  <input type="text" id="signupUsername" placeholder="Username"
-                                                            required>
-                                        </div>
-                                        <div class="input-group">
-                                                  <i class="fas fa-lock"></i>
-                                                  <input type="password" id="signupPassword" placeholder="Password"
-                                                            required>
-                                        </div>
-                                        <div class="input-group">
-                                                  <i class="fas fa-university"></i>
-                                                  <select id="university" required>
-                                                            <option value="" disabled selected>Select University
-                                                            </option>
-                                                            <option value="KNUST">KNUST</option>
-                                                            <option value="UG">UG</option>
-                                                            <option value="UCC">UCC</option>
-                                                  </select>
-                                        </div>
-                                        <button class="auth-btn" onclick="signup()">Sign Up</button>
-                                        <p class="auth-link" id="showLogin">Already have an account? Login</p>
-                              </div>
+            <div class="auth-form" id="signupForm" style="display: none;">
+                <h2>Create Account</h2>
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="signupUsername" placeholder="Username" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="signupPassword" placeholder="Password" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-university"></i>
+                    <select id="university" required>
+                        <option value="" disabled selected>Select University</option>
+                        <option value="KNUST">KNUST</option>
+                        <option value="UG">UG</option>
+                        <option value="UCC">UCC</option>
+                    </select>
+                </div>
+                <button class="auth-btn" onclick="signup()">Sign Up</button>
+                <p class="auth-link" id="showLogin">Already have an account? Login</p>
+            </div>
+        </div>
+
+        <!-- Dashboard Container (hidden by default) -->
+        <div class="dashboard-container" id="dashboardContainer" style="display: none;">
+            <header class="dashboard-header">
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="welcomeUser"></span>
+                </div>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </header>
+
+            <main class="dashboard-main">
+                <!-- User Counter Card -->
+                <div class="stats-card">
+                    <h3><i class="fas fa-users"></i> Total Users</h3>
+                    <div id="userCount">Loading...</div>
+                </div>
+
+                <div class="converter-card">
+                    <h3><i class="fas fa-exchange-alt"></i> Grade Converter</h3>
+                    <div class="input-group">
+                        <input type="number" id="inputValue" placeholder="Enter value" step="0.01" min="0" max="100">
                     </div>
-
-                    <!-- Dashboard Container (hidden by default) -->
-                    <div class="dashboard-container" id="dashboardContainer" style="display: none;">
-                              <header class="dashboard-header">
-                                        <div class="user-info">
-                                                  <i class="fas fa-user-circle"></i>
-                                                  <span id="welcomeUser"></span>
-                                        </div>
-                                        <button class="logout-btn" onclick="logout()">
-                                                  <i class="fas fa-sign-out-alt"></i> Logout
-                                        </button>
-                              </header>
-
-                              <main class="dashboard-main">
-                                        <div class="converter-card">
-                                                  <h3><i class="fas fa-exchange-alt"></i> Grade Converter</h3>
-                                                  <div class="input-group">
-                                                            <input type="number" id="inputValue"
-                                                                      placeholder="Enter value" step="0.01" min="0"
-                                                                      max="100">
-                                                  </div>
-                                                  <div class="input-group">
-                                                            <select id="direction">
-                                                                      <option value="cwa-to-cgpa">CWA to CGPA</option>
-                                                                      <option value="cgpa-to-cwa">CGPA to CWA</option>
-                                                            </select>
-                                                  </div>
-                                                  <button class="convert-btn" onclick="convertNow()">
-                                                            <i class="fas fa-calculator"></i> Convert
-                                                  </button>
-
-                                                  <div class="result-card" id="resultCard" style="display: none;">
-                                                            <h4>Conversion Result</h4>
-                                                            <div id="result"></div>
-                                                            <div id="classification"></div>
-                                                  </div>
-                                        </div>
-
-                                        <div class="history-card">
-                                                  <h3><i class="fas fa-history"></i> Conversion History</h3>
-                                                  <div class="history-controls">
-                                                            <button class="clear-btn" onclick="clearHistory()">
-                                                                      <i class="fas fa-trash"></i> Clear History
-                                                            </button>
-                                                  </div>
-                                                  <ul id="history"></ul>
-                                        </div>
-                              </main>
+                    <div class="input-group">
+                        <select id="direction">
+                            <option value="cwa-to-cgpa">CWA to CGPA</option>
+                            <option value="cgpa-to-cwa">CGPA to CWA</option>
+                        </select>
                     </div>
-          </div>
+                    <button class="convert-btn" onclick="convertNow()">
+                        <i class="fas fa-calculator"></i> Convert
+                    </button>
 
-          <script src="script.js"></script>
+                    <div class="result-card" id="resultCard" style="display: none;">
+                        <h4>Conversion Result</h4>
+                        <div id="result"></div>
+                        <div id="classification"></div>
+                    </div>
+                </div>
+
+                <div class="history-card">
+                    <h3><i class="fas fa-history"></i> Conversion History</h3>
+                    <div class="history-controls">
+                        <button class="clear-btn" onclick="clearHistory()">
+                            <i class="fas fa-trash"></i> Clear History
+                        </button>
+                    </div>
+                    <ul id="history"></ul>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
-
 </html>
