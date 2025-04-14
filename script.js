@@ -48,7 +48,7 @@ const showSignup = document.getElementById('showSignup');
 const welcomeUser = document.getElementById('welcomeUser');
 const resultCard = document.getElementById('resultCard');
 
-// Event Listeners
+// Initialize the app
 document.addEventListener('DOMContentLoaded', () => {
     // Check if user is already logged in
     const currentUser = localStorage.getItem("currentUser");
@@ -63,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showSignup.addEventListener('click', () => switchTab('signup'));
 });
 
+// Helper Functions
 function switchTab(tab) {
     if (tab === 'login') {
         loginForm.style.display = 'block';
@@ -77,7 +78,8 @@ function switchTab(tab) {
     }
 }
 
-function signup() {
+// Authentication Functions (Backend API)
+async function signup() {
     const username = document.getElementById('signupUsername').value.trim();
     const password = document.getElementById('signupPassword').value;
     const university = document.getElementById('university').value;
@@ -87,29 +89,31 @@ function signup() {
         return;
     }
 
-    if (localStorage.getItem(username)) {
-        alert('Username already exists');
-        return;
-    }
+    try {
+        const response = await fetch('/api/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password, university }),
+        });
 
-    const user = { 
-        username, 
-        password, 
-        university, 
-        history: [],
-        createdAt: new Date().toISOString()
-    };
-    
-    localStorage.setItem(username, JSON.stringify(user));
-    alert('Account created successfully! Please login.');
-    switchTab('login');
-    document.getElementById('loginUsername').value = username;
-    document.getElementById('signupUsername').value = '';
-    document.getElementById('signupPassword').value = '';
-    document.getElementById('university').value = '';
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Signup failed');
+        }
+
+        alert('Account created successfully! Please login.');
+        switchTab('login');
+        document.getElementById('loginUsername').value = username;
+        document.getElementById('signupUsername').value = '';
+        document.getElementById('signupPassword').value = '';
+        document.getElementById('university').value = '';
+    } catch (error) {
+        alert(error.message);
+    }
 }
 
-function login() {
+async function login() {
     const username = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value;
     
@@ -118,45 +122,44 @@ function login() {
         return;
     }
 
-    const user = JSON.parse(localStorage.getItem(username));
-    
-    if (!user) {
-        alert('User not found');
-        return;
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password }),
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Login failed');
+        }
+
+        localStorage.setItem("currentUser", username);
+        localStorage.setItem("userUniversity", data.university);
+        document.getElementById('loginUsername').value = '';
+        document.getElementById('loginPassword').value = '';
+        showDashboard(username);
+    } catch (error) {
+        alert(error.message);
     }
-
-    if (user.password !== password) {
-        alert('Incorrect password');
-        return;
-    }
-
-    localStorage.setItem("currentUser", username);
-    document.getElementById('loginUsername').value = '';
-    document.getElementById('loginPassword').value = '';
-    showDashboard(username);
-}
-
-function showDashboard(username) {
-    const user = JSON.parse(localStorage.getItem(username));
-    authContainer.style.display = 'none';
-    dashboardContainer.style.display = 'block';
-    welcomeUser.textContent = `Welcome, ${username} (${user.university})`;
-    updateHistory(user.history);
 }
 
 function logout() {
     localStorage.removeItem("currentUser");
+    localStorage.removeItem("userUniversity");
     dashboardContainer.style.display = 'none';
     authContainer.style.display = 'block';
     switchTab('login');
 }
 
+// Grading Conversion Functions
 function convertNow() {
     const inputValue = parseFloat(document.getElementById('inputValue').value);
     const direction = document.getElementById('direction').value;
     const username = localStorage.getItem("currentUser");
-    const user = JSON.parse(localStorage.getItem(username));
-    const uni = gradingSystems[user.university];
+    const university = localStorage.getItem("userUniversity");
+    const uni = gradingSystems[university];
 
     if (isNaN(inputValue)) {
         alert('Please enter a valid number');
@@ -184,6 +187,7 @@ function convertNow() {
     document.getElementById("classification").innerText = `Classification: ${classification}`;
     resultCard.style.display = 'block';
 
+    // Save to history (you may want to send this to your backend)
     const conversionType = direction === "cwa-to-cgpa" ? "CWA to CGPA" : "CGPA to CWA";
     const historyItem = {
         date: new Date().toISOString(),
@@ -193,9 +197,35 @@ function convertNow() {
         classification: classification
     };
     
-    user.history.unshift(historyItem); // Add to beginning of array
-    localStorage.setItem(username, JSON.stringify(user));
-    updateHistory(user.history);
+    // Temporary local storage (replace with API call if needed)
+    let history = JSON.parse(localStorage.getItem(`${username}_history`) || "[]");
+    history.unshift(historyItem);
+    localStorage.setItem(`${username}_history`, JSON.stringify(history));
+    updateHistory(history);
+}
+
+async function showDashboard(username) {
+    try {
+        // Fetch user data from backend (optional)
+        const response = await fetch(`/api/user/${username}`);
+        const user = await response.json();
+        
+        authContainer.style.display = 'none';
+        dashboardContainer.style.display = 'block';
+        welcomeUser.textContent = `Welcome, ${username} (${user.university || localStorage.getItem("userUniversity")})`;
+        
+        // Load history (from backend or local storage)
+        const history = user.history || JSON.parse(localStorage.getItem(`${username}_history`) || "[]");
+        updateHistory(history);
+    } catch (error) {
+        console.error("Failed to load dashboard:", error);
+        // Fallback to local storage if API fails
+        authContainer.style.display = 'none';
+        dashboardContainer.style.display = 'block';
+        welcomeUser.textContent = `Welcome, ${username} (${localStorage.getItem("userUniversity")})`;
+        const history = JSON.parse(localStorage.getItem(`${username}_history`) || "[]");
+        updateHistory(history);
+    }
 }
 
 function updateHistory(history) {
@@ -222,13 +252,18 @@ function updateHistory(history) {
     });
 }
 
-function clearHistory() {
+async function clearHistory() {
     const username = localStorage.getItem("currentUser");
-    const user = JSON.parse(localStorage.getItem(username));
-    
-    if (confirm('Are you sure you want to clear your conversion history?')) {
-        user.history = [];
-        localStorage.setItem(username, JSON.stringify(user));
-        updateHistory(user.history);
+    if (!confirm('Are you sure you want to clear your conversion history?')) return;
+
+    try {
+        // Call backend API to clear history if applicable
+        await fetch(`/api/user/${username}/history`, { method: 'DELETE' });
+    } catch (error) {
+        console.error("Failed to clear server history:", error);
     }
+    
+    // Clear local history
+    localStorage.removeItem(`${username}_history`);
+    updateHistory([]);
 }
