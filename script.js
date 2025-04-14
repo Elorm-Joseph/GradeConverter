@@ -1,3 +1,16 @@
+// Add this function for user count
+async function updateUserCount() {
+  try {
+    const response = await fetch('/api/users/count');
+    const data = await response.json();
+    document.getElementById('userCount').textContent = data.count;
+  } catch (error) {
+    console.error('Failed to fetch user count:', error);
+    document.getElementById('userCount').textContent = 'Error';
+  }
+}
+
+// Existing grading systems configuration
 const gradingSystems = {
     KNUST: {
         toCgpa: (cwa) => (cwa * 4) / 100,
@@ -187,7 +200,6 @@ function convertNow() {
     document.getElementById("classification").innerText = `Classification: ${classification}`;
     resultCard.style.display = 'block';
 
-    // Save to history (you may want to send this to your backend)
     const conversionType = direction === "cwa-to-cgpa" ? "CWA to CGPA" : "CGPA to CWA";
     const historyItem = {
         date: new Date().toISOString(),
@@ -197,7 +209,6 @@ function convertNow() {
         classification: classification
     };
     
-    // Temporary local storage (replace with API call if needed)
     let history = JSON.parse(localStorage.getItem(`${username}_history`) || "[]");
     history.unshift(historyItem);
     localStorage.setItem(`${username}_history`, JSON.stringify(history));
@@ -206,7 +217,6 @@ function convertNow() {
 
 async function showDashboard(username) {
     try {
-        // Fetch user data from backend (optional)
         const response = await fetch(`/api/user/${username}`);
         const user = await response.json();
         
@@ -214,17 +224,19 @@ async function showDashboard(username) {
         dashboardContainer.style.display = 'block';
         welcomeUser.textContent = `Welcome, ${username} (${user.university || localStorage.getItem("userUniversity")})`;
         
-        // Load history (from backend or local storage)
         const history = user.history || JSON.parse(localStorage.getItem(`${username}_history`) || "[]");
         updateHistory(history);
+        
+        // Call the user count update when dashboard loads
+        updateUserCount();
     } catch (error) {
         console.error("Failed to load dashboard:", error);
-        // Fallback to local storage if API fails
         authContainer.style.display = 'none';
         dashboardContainer.style.display = 'block';
         welcomeUser.textContent = `Welcome, ${username} (${localStorage.getItem("userUniversity")})`;
         const history = JSON.parse(localStorage.getItem(`${username}_history`) || "[]");
         updateHistory(history);
+        updateUserCount(); // Still try to update count even if other parts fail
     }
 }
 
@@ -257,13 +269,11 @@ async function clearHistory() {
     if (!confirm('Are you sure you want to clear your conversion history?')) return;
 
     try {
-        // Call backend API to clear history if applicable
         await fetch(`/api/user/${username}/history`, { method: 'DELETE' });
     } catch (error) {
         console.error("Failed to clear server history:", error);
     }
     
-    // Clear local history
     localStorage.removeItem(`${username}_history`);
     updateHistory([]);
 }
